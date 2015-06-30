@@ -13,11 +13,22 @@
 #
 class profiles::redis {
   $maxmem = hiera('profiles::redis::maxmem', '4gb')
-  $password = hiera('profiles::redis::password', 'ResetMe!')
+  $password = hiera('profiles::redis::password', undef)
+  $port = hiera('profiles::redis::port', '6379')
 
-  class { '::redis':
-    conf_bind        => "${::ipaddress}",
-    conf_maxmemory   => "${maxmem}",
-    conf_requirepass => "${password}",
+  if ($password) {
+    class { '::redis':
+      conf_bind        => "${::ipaddress}",
+      conf_maxmemory   => "${maxmem}",
+      conf_requirepass => "${password}",
+      conf_port        => "${port}",
+    }
+  }
+  else {
+    class { '::redis':
+      conf_bind        => "${::ipaddress}",
+      conf_maxmemory   => "${maxmem}",
+      conf_port        => "${port}",
+    }
   }
 }
