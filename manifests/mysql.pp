@@ -21,6 +21,7 @@ class profiles::mysql {
   $root_password = hiera('profiles::mysql::root_password', 'ResetMe!')
   $options = hiera_hash('profiles::mysql::options', {})
   $mysql_users = hiera_hash('profiles::mysql::users', undef)
+  $mysql_databases = hiera_hash('profiles::mysql::databases', undef)
 
   class { '::mysql::server':
     # remove all default accounts except root.
@@ -47,7 +48,7 @@ class profiles::mysql {
 
       ensure_resource('mysql_user', "${key}", $mysql_user_resource)
 
-      $mysql_user_grant_resource => {
+      $mysql_user_grant_resource = {
         ensure     => present,
         options    => ['GRANT'],
         privileges => $value['grants'],
