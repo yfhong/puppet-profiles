@@ -42,9 +42,10 @@ class profiles::tomcat {
       'connectionTimeout' => '20000',
       'URIEncoding'       => 'UTF-8',
     },
-    connector_ensure => 'present',
-    server_config         => "/etc/tomcat/server.conf"
-    notify => Tomcat::Service['default'],
+    connector_ensure      => 'present',
+    purge_connectors      => true,
+    server_config         => "/etc/tomcat/server.conf",
+    notify                => Tomcat::Service['default'],
   }
 
   # deploy applications
