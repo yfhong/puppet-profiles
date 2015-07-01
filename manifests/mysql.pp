@@ -13,8 +13,6 @@
 #     password: 'resetme!'
 # profiles::mysql::databases:
 #   'exampledb':
-#     charset: 'utf8'
-#     collate: 'utf8_general_ci'
 #     owner: 'exampleuser'
 
 
@@ -53,14 +51,12 @@ class profiles::mysql {
 
   if ($mysql_databases) {
     $mysql_databases.each |$key, $value| {
-      $db_charset = $value['charset'] or 'utf8'
-      $db_collate = $value['collate'] or 'utf8_general_ci'
       $mysql_database_resource = {
-        ensure  => present,
-        charset => $db_charset,
-        collate => $db_collate,
+        ensure   => present,
+        charset  => 'utf8',
+        collate  => 'utf8_general_ci',
         provider => 'mysql',
-        require => Mysql_user["${value['owner']}"],
+        require  => Mysql_user["${value['owner']}@%"],
       }
       ensure_resource('mysql_database', $key, $mysql_database_resource)
 
@@ -69,8 +65,8 @@ class profiles::mysql {
         options    => ['GRANT'],
         privileges => 'ALL',
         table      => "${key}.*",
-        user       => "${value['owner']}",
-        require    => Mysql_user["${value['owner']}"]
+        user       => "${value['owner']}@%",
+        require    => Mysql_user["${value['owner']}@%"]
       }
       ensure_resource('mysql_grant', "${value['owner']}@%/${key}.*", $mysql_grant_resource)
     }
