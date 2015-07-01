@@ -11,13 +11,14 @@
 #   defaults: false
 #   lookup value in hieradata, it's a array, but usually should set only one application.
 #   profiles::tomcat::applications:
-#     - name: example
-#       source: '/tmp/example.war'
+#     example:
+#       war_name: 'example.war'
+#       war_source: '/tmp/example.war'
 #
 class profiles::tomcat {
 
   $catalina_home = hiera('profiles::tomcat::catalina_home', '/usr/share/tomcat')
-  $applications = hiera_array('profiles::tomcat::applications', false)
+  $applications = hiera_hash('profiles::tomcat::applications', false)
 
   # alway install tomcat from system package repositories.
   class { '::tomcat':
@@ -48,13 +49,30 @@ class profiles::tomcat {
     notify                => Tomcat::Service['default'],
   }
 
-  # deploy applications
-  if ($applications and validate_hash($applications)) {
-    $applications.each |$entry| {
-      ::tomcat::war { "${entry['name']}":
-        war_name   => "${entry['name']}.war",
-        war_source => "${entry['source']}",
-      }
+  file { '/etc/tomcat/context.xml':
+    owner  => 'tomcat',
+    group  => 'tomcat',
+    backup => true,
+    source => 'puppet:///modules/profiles/tomcat-libs/session-jedis.context.xml',
+  }
+
+  $session_jedis_libs = [
+                         'commons-logging-1.1.3.jar',
+                         'commons-pool2-2.2.jar',
+                         'jedis-2.6.0.jar',
+                         'tomcat-juli.jar',
+                         'tomcat-redis-session-manage-tomcat7.jar',
+                         ]
+  $session_jedis_libs.each |$lib| {
+    file { "/usr/share/tomcat/lib/${lib}":
+      owner  => 'tomcat',
+      group  => 'tomcat',
+      backup => true,
+      source => "puppet:///modules/profiles/tomcat-libs/${lib}",
     }
+  }
+  # deploy applications
+  if ($applications) {
+    create_resources('::tomcat::war', $applications)
   }
 }
