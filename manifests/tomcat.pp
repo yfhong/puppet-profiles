@@ -33,6 +33,20 @@ class profiles::tomcat {
     service_ensure => 'running',
   }
 
+  ::tomcat::config::server::connector { 'tomcat-main-connector':
+    catalina_base         => "${catalina_home}",
+    port                  => '8080',
+    protocol              => 'org.apache.coyote.http11.Http11NioProtocol',
+    additional_attributes => {
+      'redirectPort'      => '8443',
+      'connectionTimeout' => '20000',
+      'URIEncoding'       => 'UTF-8',
+    },
+    connector_ensure => 'present',
+    server_config         => "/etc/tomcat/server.conf"
+    notify => Tomcat::Service['default'],
+  }
+
   # deploy applications
   if ($applications and validate_hash($applications)) {
     $applications.each |$entry| {
