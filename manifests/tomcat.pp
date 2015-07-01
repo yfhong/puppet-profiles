@@ -14,11 +14,16 @@
 #     example:
 #       war_name: 'example.war'
 #       war_source: '/tmp/example.war'
+#   profiles::tomcat::options:
+#     JAVA_OPTS:
+#       ensure: present
+#       value: '-server -Djava.awt.headless=true -Dfile.encoding=UTF-8 -Xms4096m -Xmx4096m -XX:NewSize=512m -XX:MaxNewSize=512m -XX:PermSize=512m -XX:MaxPermSize=512m -xx:+DisableExplicitGC'
 #
 class profiles::tomcat {
 
   $catalina_home = hiera('profiles::tomcat::catalina_home', '/usr/share/tomcat')
   $applications = hiera_hash('profiles::tomcat::applications', false)
+  $tomcat_options = hiera_hash('profiles::tomcat::options', false)
 
   # alway install tomcat from system package repositories.
   class { '::tomcat':
@@ -26,6 +31,15 @@ class profiles::tomcat {
     catalina_home       => "${catalina_home}",
   }
 
+  ::tomcat::instance { 'system-tomcat':
+    install_from_source => false,
+    package_ensure      => true,
+    package_name        => 'tomcat',
+  }
+
+  if ($tomcat_options) {
+    create_resources('::tomcat::setenv::entry', $tomcat_options)
+  }
   # config the service, should always use system initial script.
   ::tomcat::service { 'default':
     use_jsvc       => false,
