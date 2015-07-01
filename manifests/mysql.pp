@@ -9,13 +9,15 @@
 #   You should setup a strong enough password for user 'root'
 #
 # profiles::mysql::users:
-#   'graphite@%':
-#     ensure: 'present'
+#   'exampleuser':
 #     password: 'resetme!'
-#     tables: '*.*'
-#     grants:
-#       - CREATE
-#       - UPDATE
+# profiles::mysql::databases:
+#   'exampledb':
+#     charset: 'utf8'
+#     collate: 'utf8_general_ci'
+#     owner: 'exampleuser'
+
+
 class profiles::mysql {
 
   $root_password = hiera('profiles::mysql::root_password', 'ResetMe!')
@@ -45,18 +47,32 @@ class profiles::mysql {
         max_user_connections     => '0',
         require                  => Class['mysql::server'],
       }
+      ensure_resource('mysql_user', "${key}@%", $mysql_user_resource)
+    }
+  }
 
-      ensure_resource('mysql_user', "${key}", $mysql_user_resource)
+  if ($mysql_databases) {
+    $mysql_databases.each |$key, $value| {
+      $db_charset = $value['charset'] or 'utf8'
+      $db_collate = $value['collate'] or 'utf8_general_ci'
+      $mysql_database_resource = {
+        ensure  => present,
+        charset => $db_charset,
+        collate => $db_collate,
+        provider => 'mysql',
+        require => Mysql_user["${value['owner']}"],
+      }
+      ensure_resource('mysql_database', $key, $mysql_database_resource)
 
-      $mysql_user_grant_resource = {
+      $mysql_grant_resource = {
         ensure     => present,
         options    => ['GRANT'],
-        privileges => $value['grants'],
-        table      => "${value[tables]}",
-        user       => "${key}",
+        privileges => 'ALL',
+        table      => "${key}.*",
+        user       => "${value['owner']}",
+        require    => Mysql_user["${value['owner']}"]
       }
-
-      ensure_resource('mysql_grant', "${key}/*.*", $mysql_user_grant_resource)
+      ensure_resource('mysql_grant', "${value['owner']}@%/${key}.*", $mysql_grant_resource)
     }
   }
 }
