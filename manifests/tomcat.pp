@@ -35,6 +35,9 @@ class profiles::tomcat {
 
   ::tomcat::config::server::connector { 'tomcat-main-connector':
     catalina_base         => "${catalina_home}",
+    server_config         => "/etc/tomcat/server.xml",
+    connector_ensure      => 'present',
+    purge_connectors      => true,
     port                  => '8080',
     protocol              => 'org.apache.coyote.http11.Http11NioProtocol',
     additional_attributes => {
@@ -42,9 +45,6 @@ class profiles::tomcat {
       'connectionTimeout' => '20000',
       'URIEncoding'       => 'UTF-8',
     },
-    connector_ensure      => 'present',
-    purge_connectors      => true,
-    server_config         => "/etc/tomcat/server.conf",
     notify                => Tomcat::Service['default'],
   }
 
