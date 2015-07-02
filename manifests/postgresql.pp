@@ -20,9 +20,10 @@ class profiles::postgresql {
   $options = hiera_hash('profiles::postgresql::options', {})
   $postgresql_dbs = hiera_hash('profiles::postgresql::dbs', undef)
 
-  class { '::postgresql::global':
+  class { '::postgresql::globals':
     encoding => 'UTF-8',
     locale   => 'en_US.UTF-8',
+    confdir  => '/etc/postgresql',
   } ->
   class { '::postgresql::server':
     listen_addresses           => '*',
@@ -31,6 +32,7 @@ class profiles::postgresql {
     confdir                    => '/etc/postgresql',
     datadir                    => '/srv/pgsql/data',
     xlogdir                    => '/srv/pgsql/data/pg_xlog',
+    logdir                     => '/srv/pgsql/data/pg_log',
     needs_initdb               => true,
   }
 
