@@ -1,0 +1,15 @@
+<% if @collectd_version and (scope.function_versioncmp([@collectd_version, '5.2']) >= 0) -%>
+<Plugin aggregation>
+  <Aggregation>
+    Plugin "cpu"
+    Type "cpu"
+
+    GroupBy "Host"
+    GroupBy "TypeInstance"
+
+    CalculateSum true
+    CalculateAverage true
+  </Aggregation>
+</Plugin>
+<% end -%>
+
