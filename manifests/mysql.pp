@@ -30,8 +30,7 @@ class profiles::mysql {
     root_password           => "${root_password}",
     # set options in my.cnf
     override_options        => $options,
-    package_name            => 'mysql-community-server',
-    service_name            => 'mysqld',
+    purge_conf_dir          => true,
   }
 
   if ($mysql_users) {
