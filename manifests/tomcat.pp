@@ -18,12 +18,17 @@
 #     JAVA_OPTS:
 #       ensure: present
 #       value: '-server -Djava.awt.headless=true -Dfile.encoding=UTF-8 -Xms4096m -Xmx4096m -XX:NewSize=512m -XX:MaxNewSize=512m -XX:PermSize=512m -XX:MaxPermSize=512m -xx:+DisableExplicitGC'
+#   profiles::tomcat::redis:
+#     host: 127.0.0.1
+#     port: 6379
+#     password: 'ResetMe!'
 #
 class profiles::tomcat {
 
   $catalina_home = hiera('profiles::tomcat::catalina_home', '/usr/share/tomcat')
-  $applications = hiera_hash('profiles::tomcat::applications', false)
-  $tomcat_options = hiera_hash('profiles::tomcat::options', false)
+  $applications = hiera_hash('profiles::tomcat::applications', undef)
+  $tomcat_options = hiera_hash('profiles::tomcat::options', undef)
+  $redis_options = hiera_hash('profiles::tomcat::redis', undef)
 
   # alway install tomcat from system package repositories.
   class { '::tomcat':
@@ -63,26 +68,28 @@ class profiles::tomcat {
     notify                => Tomcat::Service['default'],
   }
 
-  file { '/etc/tomcat/context.xml':
-    owner  => 'tomcat',
-    group  => 'tomcat',
-    backup => true,
-    source => 'puppet:///modules/profiles/tomcat-libs/session-jedis.context.xml',
-  }
+  if ($redis_options) {
+    file { '/etc/tomcat/context.xml':
+      owner   => 'tomcat',
+      group   => 'tomcat',
+      backup  => true,
+      content => template('profiles/tomcat/redis-session-context.xml.erb'),
+    }
 
-  $session_jedis_libs = [
-                         'commons-logging-1.1.3.jar',
-                         'commons-pool2-2.2.jar',
-                         'jedis-2.6.0.jar',
-                         'tomcat-juli.jar',
-                         'tomcat-redis-session-manage-tomcat7.jar',
-                         ]
-  $session_jedis_libs.each |$lib| {
-    file { "/usr/share/tomcat/lib/${lib}":
-      owner  => 'tomcat',
-      group  => 'tomcat',
-      backup => true,
-      source => "puppet:///modules/profiles/tomcat-libs/${lib}",
+    $session_jedis_libs = [
+                           'commons-logging-1.1.3.jar',
+                           'commons-pool2-2.2.jar',
+                           'jedis-2.6.0.jar',
+                           'tomcat-juli.jar',
+                           'tomcat-redis-session-manage-tomcat7.jar',
+                           ]
+    $session_jedis_libs.each |$lib| {
+      file { "/usr/share/tomcat/lib/${lib}":
+        owner  => 'tomcat',
+        group  => 'tomcat',
+        backup => true,
+        source => "puppet:///modules/profiles/tomcat-libs/${lib}",
+      }
     }
   }
   # deploy applications
