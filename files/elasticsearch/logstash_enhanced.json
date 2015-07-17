@@ -2,6 +2,8 @@
   "order" : 1,
   "template" : "logstash-*",
   "settings" : {
-    "index.refresh_interval" : "60s"
+    "index.refresh_interval" : "60s",
+    "index.number_of_shards" : 10,
+    "index.number_of_replicas": 1
   }
 }
