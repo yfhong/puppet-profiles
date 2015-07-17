@@ -35,4 +35,8 @@ class profiles::elasticsearch {
       'node.name' => "${::hostname}",
     },
   }
+
+  ::elasticsearch::template { 'logstash-default-template-enhanced':
+    file => 'puppet:///modules/profiles/elasticsearch/logstash_enhanced.json',
+  }
 }

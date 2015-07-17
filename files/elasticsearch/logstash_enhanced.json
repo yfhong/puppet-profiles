@@ -1,0 +1,7 @@
+{
+  "order" : 1,
+  "template" : "logstash-*",
+  "settings" : {
+    "index.refresh_interval" : "60s"
+  }
+}
