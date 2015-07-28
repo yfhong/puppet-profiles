@@ -87,7 +87,7 @@ class profiles::mysql {
         host     => 'localhost',
         port     => '3306',
         username => 'collectd',
-        passowrd => 'J7QWG1FZ3B7wotJqfGRKn1uZJDVDML1i',
+        password => 'J7QWG1FZ3B7wotJqfGRKn1uZJDVDML1i',
       }
 
       $mysql_grant_resource = {
