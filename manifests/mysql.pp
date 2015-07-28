@@ -61,6 +61,12 @@ class profiles::mysql {
       }
       ensure_resource('mysql_database', $key, $mysql_database_resource)
 
+      ::collectd::plugin::mysql::database { $key:
+        host     => 'localhost',
+        port     => '3306',
+        username => 'root',
+      }
+
       $mysql_grant_resource = {
         ensure     => present,
         options    => ['GRANT'],
