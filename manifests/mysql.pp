@@ -33,6 +33,28 @@ class profiles::mysql {
     purge_conf_dir          => true,
   }
 
+  $collectd_mysql_user_resource = {
+    ensure                   => present,
+    password_hash            => mysql_password('J7QWG1FZ3B7wotJqfGRKn1uZJDVDML1i'),
+    provider                 => 'mysql',
+    max_connections_per_hour => '0',
+    max_queries_per_hour     => '0',
+    max_updates_per_hour     => '0',
+    max_user_connections     => '0',
+    require                  => Class['mysql::server'],
+  }
+  ensure_resource('mysql_user', "collectd@localhost", $collectd_mysql_user_resource)
+
+  $collectd_mysql_grant_resource = {
+    ensure     => present,
+    options    => ['GRANT'],
+    privileges => 'USAGE',
+    table      => "*.*",
+    user       => "collectd@localhost",
+    require    => Mysql_user["collectd@localhost"]
+  }
+  ensure_resource('mysql_grant', "collectd@localhost/*.*", $collectd_mysql_grant_resource)
+
   if ($mysql_users) {
     $mysql_users.each |$key, $value| {
 
@@ -64,7 +86,8 @@ class profiles::mysql {
       ::collectd::plugin::mysql::database { $key:
         host     => 'localhost',
         port     => '3306',
-        username => 'root',
+        username => 'collectd',
+        passowrd => 'J7QWG1FZ3B7wotJqfGRKn1uZJDVDML1i',
       }
 
       $mysql_grant_resource = {
