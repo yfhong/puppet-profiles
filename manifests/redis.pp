@@ -18,7 +18,7 @@ class profiles::redis {
 
   if ($password) {
     class { '::redis':
-      conf_bind        => "${::ipaddress}",
+      conf_bind        => '0.0.0.0',
       conf_maxmemory   => "${maxmem}",
       conf_requirepass => "${password}",
       conf_port        => "${port}",
@@ -26,9 +26,18 @@ class profiles::redis {
   }
   else {
     class { '::redis':
-      conf_bind        => "${::ipaddress}",
+      conf_bind        => '0.0.0.0',
       conf_maxmemory   => "${maxmem}",
       conf_port        => "${port}",
+    }
+  }
+
+  class { '::collectd::plugin::redis':
+    nodes => {
+      nodelocal => {
+        host => 'localhost',
+        port => "${port}",
+      },
     }
   }
 }
